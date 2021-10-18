@@ -1,6 +1,6 @@
-# Getting Started with Create React App
+# Whatsapp Clone
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A chat application with the basic functionality of sending and receiving messages, using ReactJS, Context API, Firestore database and Google Authentication.
 
 ## Available Scripts
 
