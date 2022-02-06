@@ -25,6 +25,7 @@ export default function Chat() {
     db.collection('rooms').doc(roomId).collection('messages').add({
       message: input,
       name: user.displayName,
+      uid: user.uid,
       timeStamp: firebase.firestore.FieldValue.serverTimestamp(),
     })
     setInput('')
@@ -53,10 +54,10 @@ export default function Chat() {
   }, [roomId])
 
   return (
-    <div className="chat">
-      <div className="chat_header">
+    <div className='chat'>
+      <div className='chat_header'>
         <Avatar />
-        <div className="chat_headerInfo">
+        <div className='chat_headerInfo'>
           <h3>{roomName}</h3>
           <p>
             Last Activity at{' '}
@@ -65,7 +66,7 @@ export default function Chat() {
             ).toLocaleTimeString()}
           </p>
         </div>
-        <div className="chat_headerIcons">
+        <div className='chat_headerIcons'>
           <IconButton>
             <VideocamOutlinedIcon />
           </IconButton>
@@ -80,17 +81,21 @@ export default function Chat() {
           </IconButton>
         </div>
       </div>
-      <div className="chat_body">
+      <div className='chat_body'>
         {messages.map((message) => (
           <p
             className={`chat_message ${
-              message.name === user.displayName && 'chat_recieved'
+              message.uid === user.uid && 'chat_recieved'
             }`}
           >
-            <p className="chat_name">{`${message.name === user.displayName?"":message.name}`}</p>
+            <p className='chat_name'>{`${
+              message.uid === user.uid ? '' : message.name
+            }`}</p>
             {message.message}
-            <span className="chat_timeStamp">
-              {new Date(message.timeStamp?.toDate()).toLocaleTimeString()}
+            <span className='chat_timeStamp'>
+              {`${new Date(message.timeStamp?.toDate()).getHours()}:${new Date(
+                message.timeStamp?.toDate()
+              ).getMinutes()}`}
             </span>
           </p>
         ))}
@@ -117,7 +122,7 @@ export default function Chat() {
           </span>
         </p> */}
       </div>
-      <div className="chat_footer">
+      <div className='chat_footer'>
         <IconButton>
           <InsertEmoticonOutlinedIcon />
         </IconButton>
@@ -130,20 +135,31 @@ export default function Chat() {
             onChange={(_) => {
               setInput(_.target.value)
             }}
-            placeholder="Type a message ..."
-            type="text"
+            placeholder='Type a message ...'
+            type='text'
           />
+          <button
+            onClick={(e) => e.preventDefault()}
+            className='hidden'
+            type='submit'
+          ></button>
+        </form>
+        {input.length > 0 ? (
           <button
             className={`button ${input.length > 0 ? '' : ' hidden'}`}
             onClick={sendMessage}
-            type="submit"
+            type='submit'
+            onKeyPress={(e) => {
+              console.log(e.key)
+            }}
           >
             <SendIcon style={{ color: 'gray' }} />
           </button>
-        </form>
-        <IconButton>
-          <MicNoneOutlinedIcon />
-        </IconButton>
+        ) : (
+          <IconButton>
+            <MicNoneOutlinedIcon />
+          </IconButton>
+        )}
       </div>
     </div>
   )

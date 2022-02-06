@@ -10,9 +10,9 @@ import AddOutlinedIcon from '@material-ui/icons/AddOutlined'
 import db from './firebase'
 export default function Sidebar() {
   const [rooms, setRooms] = useState([])
-  const [{user},dispatch] = useStateValue()
+  const [{ user }, dispatch] = useStateValue()
   useEffect(() => {
-   const unsubscribe = db.collection('rooms').onSnapshot((snapshot) => {
+    const unsubscribe = db.collection('rooms').onSnapshot((snapshot) => {
       setRooms(
         snapshot.docs.map((doc) => {
           return {
@@ -22,16 +22,15 @@ export default function Sidebar() {
         })
       )
     })
-
-    return ()=>{
+    return () => {
       unsubscribe()
     }
   }, [])
   return (
-    <div className="sidebar">
-      <div className="sidebar_header">
+    <div className='sidebar'>
+      <div className='sidebar_header'>
         <Avatar src={user?.photoURL} />
-        <div className="sidebar_headerRight">
+        <div className='sidebar_headerRight'>
           <IconButton>
             <DonutLargeIcon />
           </IconButton>
@@ -43,17 +42,17 @@ export default function Sidebar() {
           </IconButton>
         </div>
       </div>
-      <div className="sidebar_search">
-        <div className="sidebar_searchContainer">
+      <div className='sidebar_search'>
+        <div className='sidebar_searchContainer'>
           <SearchOutlinedIcon />
           <input
-            className="inputSearch"
-            type="text"
-            placeholder="Search or Start a new Chat"
-          ></input>
+            className='inputSearch'
+            type='text'
+            placeholder='Search or Start a new Chat'
+         />
         </div>
       </div>
-      <div className="sidebar_chats">
+      <div className='sidebar_chats'>
         <SidebarChat addNewChat />
         {rooms.map((room) => {
           return (
