@@ -1,62 +1,80 @@
-import React, { useState, useEffect } from 'react'
-import './css/chat.css'
-import firebase from 'firebase'
-import { Avatar, IconButton } from '@material-ui/core'
-import SearchOutlinedIcon from '@material-ui/icons/SearchOutlined'
-import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined'
-import MoreHorizOutlinedIcon from '@material-ui/icons/MoreHorizOutlined'
-import VideocamOutlinedIcon from '@material-ui/icons/VideocamOutlined'
-import PhoneOutlinedIcon from '@material-ui/icons/PhoneOutlined'
-import InsertEmoticonOutlinedIcon from '@material-ui/icons/InsertEmoticonOutlined'
-import MicNoneOutlinedIcon from '@material-ui/icons/MicNoneOutlined'
-import SendIcon from '@material-ui/icons/Send'
-import { useParams } from 'react-router-dom'
-import db from './firebase'
-import { useStateValue } from './StateProvider'
+import React, { useState, useEffect } from 'react';
+import './css/chat.css';
+import {
+  collection,
+  doc,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { Avatar, IconButton } from '@material-ui/core';
+import SearchOutlinedIcon from '@material-ui/icons/SearchOutlined';
+import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined';
+import MoreHorizOutlinedIcon from '@material-ui/icons/MoreHorizOutlined';
+import VideocamOutlinedIcon from '@material-ui/icons/VideocamOutlined';
+import PhoneOutlinedIcon from '@material-ui/icons/PhoneOutlined';
+import InsertEmoticonOutlinedIcon from '@material-ui/icons/InsertEmoticonOutlined';
+import MicNoneOutlinedIcon from '@material-ui/icons/MicNoneOutlined';
+import SendIcon from '@material-ui/icons/Send';
+import { useParams } from 'react-router-dom';
+import db from './firebase';
+import { useStateValue } from './StateProvider';
 export default function Chat() {
-  const [input, setInput] = useState('')
-  const [roomName, setRoomName] = useState('')
-  const [messages, setMessages] = useState([])
-  const [{ user }, dispatch] = useStateValue()
-  const { roomId } = useParams()
+  const [input, setInput] = useState('');
+  const [roomName, setRoomName] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [{ user }, dispatch] = useStateValue();
+  const { roomId } = useParams();
 
-  const sendMessage = (_) => {
-    _.preventDefault()
-    db.collection('rooms').doc(roomId).collection('messages').add({
-      message: input,
-      name: user.displayName,
-      timeStamp: firebase.firestore.FieldValue.serverTimestamp(),
-    })
-    setInput('')
-  }
+  const sendMessage = async (_) => {
+    _.preventDefault();
+    try {
+      await addDoc(collection(db, 'rooms', roomId, 'messages'), {
+        message: input,
+        name: user.displayName,
+        uid: user.uid,
+        timeStamp: serverTimestamp(),
+      });
+      console.log('Message sent successfully!');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+    setInput('');
+  };
 
   useEffect(() => {
     if (roomId) {
-      db.collection('rooms')
-        .doc(roomId)
-        .onSnapshot((snapshot) => {
-          setRoomName(snapshot.data().name)
-        })
+      // Listen for room name updates
+      const roomRef = doc(db, 'rooms', roomId);
+      const unsubscribeRoom = onSnapshot(roomRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setRoomName(snapshot.data().name);
+        }
+      });
 
-      db.collection('rooms')
-        .doc(roomId)
-        .collection('messages')
-        .orderBy('timeStamp', 'asc')
-        .onSnapshot((snapshot) => {
-          setMessages(
-            snapshot.docs.map((doc) => {
-              return doc.data()
-            })
-          )
-        })
+      // Listen for messages updates
+      const messagesRef = collection(db, 'rooms', roomId, 'messages');
+      const q = query(messagesRef, orderBy('timeStamp', 'asc'));
+
+      const unsubscribeMessages = onSnapshot(q, (snapshot) => {
+        setMessages(snapshot.docs.map((doc) => doc.data()));
+      });
+
+      // Cleanup function to unsubscribe when roomId changes or component unmounts
+      return () => {
+        unsubscribeRoom();
+        unsubscribeMessages();
+      };
     }
-  }, [roomId])
+  }, [roomId]);
 
   return (
-    <div className="chat">
-      <div className="chat_header">
+    <div className='chat'>
+      <div className='chat_header'>
         <Avatar />
-        <div className="chat_headerInfo">
+        <div className='chat_headerInfo'>
           <h3>{roomName}</h3>
           <p>
             Last Activity at{' '}
@@ -65,7 +83,7 @@ export default function Chat() {
             ).toLocaleTimeString()}
           </p>
         </div>
-        <div className="chat_headerIcons">
+        <div className='chat_headerIcons'>
           <IconButton>
             <VideocamOutlinedIcon />
           </IconButton>
@@ -80,17 +98,21 @@ export default function Chat() {
           </IconButton>
         </div>
       </div>
-      <div className="chat_body">
+      <div className='chat_body'>
         {messages.map((message) => (
           <p
             className={`chat_message ${
-              message.name === user.displayName && 'chat_recieved'
+              message.uid === user.uid && 'chat_recieved'
             }`}
           >
-            <p className="chat_name">{`${message.name === user.displayName?"":message.name}`}</p>
+            <p className='chat_name'>{`${
+              message.uid === user.uid ? '' : message.name
+            }`}</p>
             {message.message}
-            <span className="chat_timeStamp">
-              {new Date(message.timeStamp?.toDate()).toLocaleTimeString()}
+            <span className='chat_timeStamp'>
+              {`${new Date(message.timeStamp?.toDate()).getHours()}:${new Date(
+                message.timeStamp?.toDate()
+              ).getMinutes()}`}
             </span>
           </p>
         ))}
@@ -117,7 +139,7 @@ export default function Chat() {
           </span>
         </p> */}
       </div>
-      <div className="chat_footer">
+      <div className='chat_footer'>
         <IconButton>
           <InsertEmoticonOutlinedIcon />
         </IconButton>
@@ -128,23 +150,34 @@ export default function Chat() {
           <input
             value={input}
             onChange={(_) => {
-              setInput(_.target.value)
+              setInput(_.target.value);
             }}
-            placeholder="Type a message ..."
-            type="text"
+            placeholder='Type a message ...'
+            type='text'
           />
+          <button
+            onClick={(e) => e.preventDefault()}
+            className='hidden'
+            type='submit'
+          ></button>
+        </form>
+        {input.length > 0 ? (
           <button
             className={`button ${input.length > 0 ? '' : ' hidden'}`}
             onClick={sendMessage}
-            type="submit"
+            type='submit'
+            onKeyPress={(e) => {
+              console.log(e.key);
+            }}
           >
             <SendIcon style={{ color: 'gray' }} />
           </button>
-        </form>
-        <IconButton>
-          <MicNoneOutlinedIcon />
-        </IconButton>
+        ) : (
+          <IconButton>
+            <MicNoneOutlinedIcon />
+          </IconButton>
+        )}
       </div>
     </div>
-  )
+  );
 }

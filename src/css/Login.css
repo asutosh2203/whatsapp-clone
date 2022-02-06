@@ -22,6 +22,8 @@
     text-transform: inherit !important;
     background-color: rgb(75, 166, 241);
     color: white;
+    border-radius: 30px;
+    padding: 10px 30px;
 }
 .login_container > button:hover{
     background-color: rgb(75, 140, 255);
