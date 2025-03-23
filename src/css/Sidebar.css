@@ -6,6 +6,7 @@
 
 .sidebar_header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   padding: 12px;
   padding-left: 20px;
@@ -16,7 +17,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-width: 10vw;
+  min-width: 8vw;
 }
 
 .sidebar_search {
