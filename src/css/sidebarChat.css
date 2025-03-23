@@ -13,16 +13,20 @@
 .sidebarChat_info {
   padding: 5px 10px;
 }
-.sidebarChat_info>p{
+.sidebarChat_info > p {
   margin-top: 3px;
   color: gray;
   font-size: 14px;
 }
-.sidebarChat_info>h4{
+.sidebarChat_info > h4 {
   font-weight: 500;
   color: black;
 }
-a{
+a {
   text-decoration: none !important;
   color: black;
+}
+
+.chat_avatar {
+  height: 50px;
 }

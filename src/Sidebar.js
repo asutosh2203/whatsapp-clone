@@ -7,22 +7,38 @@ import SearchOutlinedIcon from '@material-ui/icons/SearchOutlined';
 import MoreHorizOutlinedIcon from '@material-ui/icons/MoreHorizOutlined';
 import DonutLargeIcon from '@material-ui/icons/DonutLarge';
 import AddOutlinedIcon from '@material-ui/icons/AddOutlined';
-import db from './firebase';
+import db, { auth } from './firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 
 export default function Sidebar() {
-  const [rooms, setRooms] = useState([]);
+  const [chats, setChats] = useState([]);
   const [{ user }, dispatch] = useStateValue();
 
   useEffect(() => {
-    const roomsRef = collection(db, 'rooms');
+    // const roomsRef = collection(db, 'rooms');
 
-    const unsubscribe = onSnapshot(roomsRef, (snapshot) => {
-      setRooms(
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          data: doc.data(),
-        }))
+    // const unsubscribe = onSnapshot(roomsRef, (snapshot) => {
+    //   setRooms(
+    //     snapshot.docs.map((doc) => ({
+    //       id: doc.id,
+    //       data: doc.data(),
+    //     }))
+    //   );
+    // });
+
+    const chatsRef = collection(db, 'chats');
+
+    const unsubscribe = onSnapshot(chatsRef, (snapshot) => {
+      setChats(
+        snapshot.docs.map((doc) => {
+          if (doc.id.includes(user.uid)) {
+            return {
+              id: doc?.id,
+              data: doc.data(),
+            };
+          }
+        })
       );
     });
 
@@ -33,7 +49,9 @@ export default function Sidebar() {
   return (
     <div className='sidebar'>
       <div className='sidebar_header'>
-        <Avatar src={user?.photoURL} />
+        <Avatar>
+          <img className='user_avatar' src={user?.photoURL} />
+        </Avatar>
         <div className='sidebar_headerRight'>
           <IconButton>
             <DonutLargeIcon />
@@ -58,11 +76,27 @@ export default function Sidebar() {
       </div>
       <div className='sidebar_chats'>
         <SidebarChat addNewChat />
-        {rooms.map((room) => {
+        {chats.map((chatData) => {
+          console.log(chatData);
+
           return (
-            <SidebarChat key={room.id} id={room.id} name={room.data.name} />
+            chatData && (
+              <SidebarChat
+                key={chatData.id}
+                id={chatData.id}
+                lastUpdated={chatData.data.lastUpdated}
+                lastMessage={chatData.data.lastMessage}
+              />
+            )
           );
         })}
+        <button
+          onClick={() => {
+            signOut(auth);
+          }}
+        >
+          Sign Out
+        </button>
       </div>
     </div>
   );
