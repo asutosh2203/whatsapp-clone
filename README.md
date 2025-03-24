@@ -1,70 +1,72 @@
-# Whatsapp Clone
+# Chat App
 
-A chat application with the basic functionality of sending and receiving messages, using ReactJS, Context API, Firestore database and Google Authentication.
+A real-time chat application built with React and Firebase Firestore, supporting one-on-one messaging.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- Google Authentication for user login
+- Real-time messaging with Firestore and Pusher.js
+- One-on-one chat functionality
+- Unread message count for each conversation
+- Last seen and online status tracking
+- Chat ordering based on the latest message
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **Frontend:** React, Firebase Authentication
+- **Backend:** Firebase Firestore, Firebase Storage
+- **State Management:** React Context API
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Setup Instructions
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Ensure you have:
 
-### `npm run build`
+- Node.js installed
+- Firebase project set up
+- Pusher credentials
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Installation
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/asutosh2203/whatsapp-clone.git
+   cd whatsapp-clone
+   ```
+2. Install dependencies:
+   ```sh
+   npm install
+   ```
+3. Set up Firebase:
+   - Create a Firebase project in the [Firebase Console](https://console.firebase.google.com/)
+   - Enable Firestore, Firebase Authentication (Google Sign-In), and Firebase Storage
+   - Create a `.env` file and add your Firebase credentials:
+     ```sh
+     REACT_APP_FIREBASE_API_KEY=your_api_key
+     REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain
+     REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+     REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+     REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+     REACT_APP_FIREBASE_APP_ID=your_app_id
+     ```
+4. Start the development server:
+   ```sh
+   npm start
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Running in Production
 
-### `npm run eject`
+1. Build the project:
+   ```sh
+   npm run build
+   ```
+2. Deploy to Firebase Hosting (if using Firebase):
+   ```sh
+   firebase deploy
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## License
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+This project is licensed under the MIT License.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
