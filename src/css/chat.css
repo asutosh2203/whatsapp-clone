@@ -2,31 +2,33 @@
   display: flex;
   flex-direction: column;
   flex: 0.7;
+
+  position: relative;
 }
-.chat_header{
+.chat_header {
   display: flex;
   align-items: center;
   padding: 12px;
   padding-left: 20px;
   border-bottom: 1px solid lightgray;
 }
-.chat_headerInfo{
- flex: 1;
- padding-left: 20px;
- cursor: pointer;
+.chat_headerInfo {
+  flex: 1;
+  padding-left: 20px;
+  cursor: pointer;
 }
-.chat_headerInfo>h3{
+.chat_headerInfo > h3 {
   margin-bottom: 3px;
   font-weight: 500;
   font-size: 16px;
- }
- .chat_headerInfo>p{
-   color: gray;
-   font-size: 14px;
- }
-.chat_body{
+}
+.chat_headerInfo > p {
+  color: gray;
+  font-size: 14px;
+}
+.chat_body {
   flex: 1;
-  background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
+  background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
   background-repeat: repeat;
   background-position: center;
   padding: 30px;
@@ -36,14 +38,14 @@
   display: none;
 }
 
-.chat_name{
+.chat_name {
   /* position: absolute; */
   margin-bottom: 3px;
   top: -15px;
   font-weight: 700;
   font-size: small;
 }
-.chat_message{
+.chat_message {
   display: flex;
   align-items: flex-end;
   position: relative;
@@ -56,38 +58,63 @@
   margin-bottom: 0.75rem;
   line-height: 1.25rem;
 }
-.chat_recieved{
+.chat_sent {
   margin-left: auto;
   background-color: rgb(130, 189, 238);
 }
-.chat_timeStamp{
-  margin-left: 10px;
-  font-size: xx-small;
+
+.message_media {
+  height: 10rem;
+  border-radius: 10px;
 }
-.chat_footer{
+
+.message_content {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.chat_timeStamp {
+  margin-left: 1.5rem;
+  font-size: xx-small;
+  line-height: 0.8rem;
+}
+.chat_footer_container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.chat_footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   height: 60px;
+  width: 100%;
   border-top: 1px solid lightgray;
 }
-.chat_footer > form{
+.input_media {
+  height: 15rem;
+  margin: 1rem;
+  border-radius: 1rem;
+}
+
+.chat_footer > form {
   display: flex;
   flex: 1;
   padding: 20px;
 }
 
-.chat_footer > form > input{
+.chat_footer > form > input {
   flex: 1;
   border-radius: 5px;
   padding: 10px;
   border: none;
   outline-width: 0;
 }
-.chat_footer > button{
+.chat_footer > button {
   border: none;
   outline-width: 0;
 }
-.hidden{
+.hidden {
   display: none;
 }

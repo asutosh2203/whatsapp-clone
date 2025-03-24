@@ -1,0 +1,18 @@
+.video_player{
+    position: relative;
+}
+
+video{
+    cursor: pointer;
+}
+
+.play_pause{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    z-index: 9999;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+}

@@ -22,12 +22,17 @@ import InsertEmoticonOutlinedIcon from '@material-ui/icons/InsertEmoticonOutline
 import MicNoneOutlinedIcon from '@material-ui/icons/MicNoneOutlined';
 import SendIcon from '@material-ui/icons/Send';
 import { useParams } from 'react-router-dom';
-import db from './firebase';
+import db, { storage } from './firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useStateValue } from './StateProvider';
 import { getOtherUserId } from './utils';
+import VideoPlayer from './VideoPlayer';
 
 export default function Chat() {
   const [input, setInput] = useState('');
+  const [inputMedia, setInputMedia] = useState('');
+  const [inputMediaType, setInputMediaType] = useState('');
+  const [progress, setProgress] = useState(0);
   const [chatName, setChatName] = useState('');
   const [photo, setPhoto] = useState('');
   const [messages, setMessages] = useState([]);
@@ -96,6 +101,8 @@ export default function Chat() {
     // };
   }, [chatId]);
 
+  const fileRef = useRef(null);
+
   async function markChatAsRead(chatRef, userId) {
     await updateDoc(chatRef, {
       [`unreadCounts.${userId}`]: 0,
@@ -103,7 +110,8 @@ export default function Chat() {
   }
 
   const sendMessage = async (_) => {
-    if (!input) return;
+    if (!input && !inputMedia) return;
+
     _.preventDefault();
     try {
       // Add new message to the messages collection
@@ -112,25 +120,78 @@ export default function Chat() {
         name: user.displayName,
         senderId: user.uid,
         timeStamp: serverTimestamp(),
+        mediaUrl: inputMedia.length > 0 ? inputMedia : null,
       });
 
       const recipientId = getOtherUserId(chatId, user.uid);
 
       const userRef = doc(db, 'users', recipientId);
       const userSnap = await getDoc(userRef);
-      console.log(chatId !== userSnap.data().activeChatId);
+
       // update the sidebar chat info
       await updateDoc(doc(db, 'chats', chatId), {
         lastMessage: input,
+        lastMessageType:
+          input.length > 0
+            ? inputMedia.length > 0
+              ? `${inputMediaType}Text`
+              : 'text'
+            : inputMediaType,
         lastUpdated: serverTimestamp(),
         [`unreadCounts.${recipientId}`]:
           chatId !== userSnap.data().activeChatId && increment(1),
       });
       setInput('');
+      setInputMedia('');
 
       console.log('Message sent successfully!');
     } catch (error) {
       console.error('Error sending message:', error);
+    }
+  };
+
+  const uploadMedia = async (file) => {
+    const storageRef = ref(storage, `messages/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Calculate upload progress
+          const progressPercent = Math.round(
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          );
+          setProgress(progressPercent);
+        },
+        (error) => reject(error),
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          resolve(downloadURL);
+        }
+      );
+    });
+  };
+
+  const handleFileUpload = async (e) => {
+    e.preventDefault();
+    const file = e.target.files[0]; // Get the selected file
+    console.log(file);
+    try {
+      if (!file) return;
+
+      if (file.size > 52428800) {
+        throw new Error('File size cannot exceed 50MB');
+      }
+
+      setInputMediaType(file.type.split('/')[0]);
+
+      setInputMedia(await uploadMedia(file));
+      // setInputMedia(
+      //   'https://firebasestorage.googleapis.com/v0/b/whatsapp-reactjs-68f7e/o/messages%2F1742854910990_VALORANT%20%20%202024-12-17%2017-50-27.mp4?alt=media&token=86c656d2-649c-4776-a708-a5721ea9bbcc'
+      // );
+    } catch (error) {
+      alert(error.message);
     }
   };
 
@@ -167,70 +228,96 @@ export default function Chat() {
       <div className='chat_body'>
         {messages.map((message, index) => {
           return (
-            <p
+            <div
               key={index}
               ref={index === messages.length - 1 ? lastMessageRef : null}
               className={`chat_message ${
-                message.senderId === user.uid && 'chat_recieved'
+                message.senderId === user.uid && 'chat_sent'
               }`}
+              style={{ display: message.mediaUrl?.length > 0 && 'block' }}
             >
               {/* <p className='chat_name'>{`${
               message.senderId === user.uid ? '' : message.name
             }`}</p> */}
-              {message.message}
-              <span className='chat_timeStamp'>
-                {message.timeStamp &&
-                  new Date(message.timeStamp?.toDate())
-                    .toLocaleTimeString()
-                    .split(':')[0]}
-                :
-                {message.timeStamp &&
-                  new Date(message.timeStamp?.toDate())
-                    .toLocaleTimeString()
-                    .split(':')[1]}
-              </span>
-            </p>
+              {message.mediaUrl?.length > 0 && (
+                <img src={message.mediaUrl} className='message_media' />
+              )}
+              <div className='message_content'>
+                <p>{message.message}</p>
+                <p className='chat_timeStamp'>
+                  {message.timeStamp &&
+                    new Date(message.timeStamp?.toDate())
+                      .toLocaleTimeString()
+                      .split(':')[0]}
+                  :
+                  {message.timeStamp &&
+                    new Date(message.timeStamp?.toDate())
+                      .toLocaleTimeString()
+                      .split(':')[1]}
+                </p>
+              </div>
+            </div>
           );
         })}
       </div>
-      <div className='chat_footer'>
-        <IconButton>
-          <InsertEmoticonOutlinedIcon />
-        </IconButton>
-        <IconButton>
-          <AttachFileOutlinedIcon />
-        </IconButton>
-        <form>
-          <input
-            value={input}
-            onChange={(_) => {
-              setInput(_.target.value);
-            }}
-            onKeyDown={(_) => {
-              if (_.key === 'Enter') sendMessage(_);
-            }}
-            placeholder='Type a message ...'
-            type='text'
-          />
-          <button
-            onClick={(e) => e.preventDefault()}
-            className='hidden'
-            type='submit'
-          ></button>
-        </form>
-        {input.length > 0 ? (
-          <button
-            className={`button ${input.length > 0 ? '' : ' hidden'}`}
-            onClick={sendMessage}
-            type='submit'
-          >
-            <SendIcon style={{ color: 'gray' }} />
-          </button>
-        ) : (
-          <IconButton>
-            <MicNoneOutlinedIcon />
-          </IconButton>
+      <div className='chat_footer_container'>
+        {progress > 0 && progress < 100 && <p>Uploading: {progress}%</p>}
+        {inputMedia && inputMediaType == 'image' && (
+          <img className='input_media' src={inputMedia} />
         )}
+        {inputMedia && inputMediaType == 'video' && (
+          <VideoPlayer className='input_media' src={inputMedia} />
+        )}
+
+        <div className='chat_footer'>
+          <IconButton>
+            <InsertEmoticonOutlinedIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              fileRef.current.click();
+            }}
+          >
+            <AttachFileOutlinedIcon />
+          </IconButton>
+
+          {/* file upload input */}
+          <input type='file' hidden ref={fileRef} onChange={handleFileUpload} />
+
+          <form>
+            <input
+              value={input}
+              onChange={(_) => {
+                setInput(_.target.value);
+              }}
+              onKeyDown={(_) => {
+                if (_.key === 'Enter') sendMessage(_);
+              }}
+              placeholder='Type a message ...'
+              type='text'
+            />
+            <button
+              onClick={(e) => e.preventDefault()}
+              className='hidden'
+              type='submit'
+            ></button>
+          </form>
+          {input.length > 0 || inputMedia.length > 0 ? (
+            <button
+              className={`button ${
+                input.length > 0 || inputMedia.length > 0 ? '' : ' hidden'
+              }`}
+              onClick={sendMessage}
+              type='submit'
+            >
+              <SendIcon style={{ color: 'gray' }} />
+            </button>
+          ) : (
+            <IconButton>
+              <MicNoneOutlinedIcon />
+            </IconButton>
+          )}
+        </div>
       </div>
     </div>
   );
