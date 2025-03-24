@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './css/chat.css';
 import {
   collection,
@@ -7,7 +7,10 @@ import {
   orderBy,
   onSnapshot,
   addDoc,
+  getDoc,
   serverTimestamp,
+  increment,
+  updateDoc,
 } from 'firebase/firestore';
 import { Avatar, IconButton } from '@material-ui/core';
 import SearchOutlinedIcon from '@material-ui/icons/SearchOutlined';
@@ -21,46 +24,51 @@ import SendIcon from '@material-ui/icons/Send';
 import { useParams } from 'react-router-dom';
 import db from './firebase';
 import { useStateValue } from './StateProvider';
+import { getOtherUserId } from './utils';
+
 export default function Chat() {
   const [input, setInput] = useState('');
-  const [roomName, setRoomName] = useState('');
+  const [chatName, setChatName] = useState('');
+  const [photo, setPhoto] = useState('');
   const [messages, setMessages] = useState([]);
+
   const [{ user }, dispatch] = useStateValue();
-  const { roomId } = useParams();
 
-  const sendMessage = async (_) => {
-    _.preventDefault();
-    try {
-      await addDoc(collection(db, 'rooms', roomId, 'messages'), {
-        message: input,
-        name: user.displayName,
-        uid: user.uid,
-        timeStamp: serverTimestamp(),
-      });
-      console.log('Message sent successfully!');
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
-    setInput('');
-  };
+  const { chatId } = useParams();
 
+  const lastMessageRef = useRef(null);
+
+  // useeffect for messages
   useEffect(() => {
-    if (roomId) {
-      // Listen for room name updates
-      const roomRef = doc(db, 'rooms', roomId);
-      const unsubscribeRoom = onSnapshot(roomRef, (snapshot) => {
-        if (snapshot.exists()) {
-          setRoomName(snapshot.data().name);
-        }
+    if (chatId) {
+      // Listen for chat name updates
+      const roomRef = doc(db, 'chats', chatId);
+      const unsubscribeRoom = onSnapshot(roomRef, async (snapshot) => {
+        if (!snapshot.exists()) return;
+
+        const recipientId = snapshot
+          .data()
+          .participants.filter((participant) => {
+            return participant !== user.uid;
+          })[0];
+
+        const userRef = doc(db, 'users', recipientId);
+        const userDoc = await getDoc(userRef);
+
+        setChatName(userDoc.data().name);
+        setPhoto(userDoc.data().photoURL);
       });
 
       // Listen for messages updates
-      const messagesRef = collection(db, 'rooms', roomId, 'messages');
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
       const q = query(messagesRef, orderBy('timeStamp', 'asc'));
 
       const unsubscribeMessages = onSnapshot(q, (snapshot) => {
         setMessages(snapshot.docs.map((doc) => doc.data()));
       });
+
+      // Mark chat as read
+      markChatAsRead(roomRef, user.uid);
 
       // Cleanup function to unsubscribe when roomId changes or component unmounts
       return () => {
@@ -68,20 +76,78 @@ export default function Chat() {
         unsubscribeMessages();
       };
     }
-  }, [roomId]);
+  }, [chatId]);
+
+  // useEffect for scrolling to the bottom of the chat
+  useEffect(() => {
+    lastMessageRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // 🔥 Mark chat as active
+  useEffect(() => {
+    const userRef = doc(db, 'users', user.uid);
+    const markChatActive = async () => {
+      await updateDoc(userRef, { activeChatId: chatId });
+    };
+    markChatActive();
+
+    // return () => {
+    //   updateDoc(userRef, { activeChatId: null }); // Reset when user leaves
+    // };
+  }, [chatId]);
+
+  async function markChatAsRead(chatRef, userId) {
+    await updateDoc(chatRef, {
+      [`unreadCounts.${userId}`]: 0,
+    });
+  }
+
+  const sendMessage = async (_) => {
+    if (!input) return;
+    _.preventDefault();
+    try {
+      // Add new message to the messages collection
+      await addDoc(collection(db, 'chats', chatId, 'messages'), {
+        message: input,
+        name: user.displayName,
+        senderId: user.uid,
+        timeStamp: serverTimestamp(),
+      });
+
+      const recipientId = getOtherUserId(chatId, user.uid);
+
+      const userRef = doc(db, 'users', recipientId);
+      const userSnap = await getDoc(userRef);
+      console.log(chatId !== userSnap.data().activeChatId);
+      // update the sidebar chat info
+      await updateDoc(doc(db, 'chats', chatId), {
+        lastMessage: input,
+        lastUpdated: serverTimestamp(),
+        [`unreadCounts.${recipientId}`]:
+          chatId !== userSnap.data().activeChatId && increment(1),
+      });
+      setInput('');
+
+      console.log('Message sent successfully!');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
 
   return (
     <div className='chat'>
       <div className='chat_header'>
-        <Avatar />
+        <Avatar>
+          <img src={photo} style={{ height: '40px' }} />
+        </Avatar>
         <div className='chat_headerInfo'>
-          <h3>{roomName}</h3>
-          <p>
+          <h3>{chatName}</h3>
+          {/* <p>
             Last Activity at{' '}
             {new Date(
               messages[messages.length - 1]?.timeStamp?.toDate()
             ).toLocaleTimeString()}
-          </p>
+          </p> */}
         </div>
         <div className='chat_headerIcons'>
           <IconButton>
@@ -99,45 +165,33 @@ export default function Chat() {
         </div>
       </div>
       <div className='chat_body'>
-        {messages.map((message) => (
-          <p
-            className={`chat_message ${
-              message.uid === user.uid && 'chat_recieved'
-            }`}
-          >
-            <p className='chat_name'>{`${
-              message.uid === user.uid ? '' : message.name
-            }`}</p>
-            {message.message}
-            <span className='chat_timeStamp'>
-              {`${new Date(message.timeStamp?.toDate()).getHours()}:${new Date(
-                message.timeStamp?.toDate()
-              ).getMinutes()}`}
-            </span>
-          </p>
-        ))}
-
-        {/* <p className="chat_message">
-          <p className="chat_name">Asutosh</p>
-          This is a message
-          <span className="chat_timeStamp">
-            {new Date().toLocaleTimeString()}
-          </span>
-        </p>
-        <p className="chat_message chat_recieved">
-          <p className="chat_name">Akankshya</p>
-          This is a message
-          <span className="chat_timeStamp">
-            {new Date().toLocaleTimeString()}
-          </span>
-        </p>
-        <p className="chat_message">
-          <p className="chat_name">Asutosh</p>
-          This is a message
-          <span className="chat_timeStamp">
-            {new Date().toLocaleTimeString()}
-          </span>
-        </p> */}
+        {messages.map((message, index) => {
+          return (
+            <p
+              key={index}
+              ref={index === messages.length - 1 ? lastMessageRef : null}
+              className={`chat_message ${
+                message.senderId === user.uid && 'chat_recieved'
+              }`}
+            >
+              {/* <p className='chat_name'>{`${
+              message.senderId === user.uid ? '' : message.name
+            }`}</p> */}
+              {message.message}
+              <span className='chat_timeStamp'>
+                {message.timeStamp &&
+                  new Date(message.timeStamp?.toDate())
+                    .toLocaleTimeString()
+                    .split(':')[0]}
+                :
+                {message.timeStamp &&
+                  new Date(message.timeStamp?.toDate())
+                    .toLocaleTimeString()
+                    .split(':')[1]}
+              </span>
+            </p>
+          );
+        })}
       </div>
       <div className='chat_footer'>
         <IconButton>
@@ -151,6 +205,9 @@ export default function Chat() {
             value={input}
             onChange={(_) => {
               setInput(_.target.value);
+            }}
+            onKeyDown={(_) => {
+              if (_.key === 'Enter') sendMessage(_);
             }}
             placeholder='Type a message ...'
             type='text'
@@ -166,9 +223,6 @@ export default function Chat() {
             className={`button ${input.length > 0 ? '' : ' hidden'}`}
             onClick={sendMessage}
             type='submit'
-            onKeyPress={(e) => {
-              console.log(e.key);
-            }}
           >
             <SendIcon style={{ color: 'gray' }} />
           </button>

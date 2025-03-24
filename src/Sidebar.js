@@ -14,7 +14,6 @@ import {
   orderBy,
   doc,
   getDoc,
-  getDocs,
   setDoc,
   serverTimestamp,
   onSnapshot,
@@ -83,6 +82,10 @@ export default function Sidebar() {
           participants: [currentUid, recipientUid],
           lastMessage: '',
           lastUpdated: serverTimestamp(),
+          unreadCounts: {
+            [currentUid]: 0,
+            [recipientUid]: 0,
+          },
         });
 
         console.log(`New chat with ${recipientEmail} created successfully!`);

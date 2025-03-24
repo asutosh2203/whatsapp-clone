@@ -52,6 +52,7 @@
   flex: 1;
   background-color: white;
   overflow: scroll;
+  scrollbar-width: none;
 }
 
 .user_avatar {
