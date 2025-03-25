@@ -93,10 +93,7 @@ export default function Sidebar() {
             [recipientUid]: 0,
           },
         });
-
-        console.log(`New chat with ${recipientEmail} created successfully!`);
       } else {
-        console.log('Chat already exists');
         navigate(`/chats/${chatId}`);
       }
     } catch (error) {

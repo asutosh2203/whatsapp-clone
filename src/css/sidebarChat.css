@@ -20,10 +20,13 @@
 .sidebarChat_info {
   padding: 5px 10px;
 }
-.sidebarChat_info > p {
+.sidebarChat_info > div {
   margin-top: 3px;
   color: gray;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .sidebarChat_info > h4 {
   font-weight: 500;
@@ -36,6 +39,10 @@ a {
 
 .chat_avatar {
   height: 50px;
+}
+
+.placeholder {
+  text-transform: capitalize;
 }
 
 .sidebarChat_right {

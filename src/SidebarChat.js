@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import './css/sidebarChat.css';
 import { Avatar } from '@mui/material';
 import db from './firebase';
@@ -20,31 +20,67 @@ export default function SidebarChat({
 
   const [{ user }, dispatch] = useStateValue();
 
-  useEffect(async () => {
-    if (id) {
-      const recipientId = getOtherUserId(id, user.uid);
+  useEffect(() => {
+    if (!id) return;
 
-      const recipientRef = doc(db, 'users', recipientId);
-      const recipientSnap = await getDoc(recipientRef);
+    const fetchRecipientData = async () => {
+      try {
+        const recipientId = getOtherUserId(id, user.uid);
+        const recipientRef = doc(db, 'users', recipientId);
+        const recipientSnap = await getDoc(recipientRef);
 
-      setName(recipientSnap.data().name);
-      setPhoto(recipientSnap.data().photoURL);
+        if (recipientSnap.exists()) {
+          setName(recipientSnap.data().name);
+          setPhoto(recipientSnap.data().photoURL);
+        }
 
-      const chatRef = doc(db, 'chats', id);
+        // Subscribe to chat updates
+        const chatRef = doc(db, 'chats', id);
+        const unsubscribe = onSnapshot(chatRef, (snapshot) => {
+          setUnreadCount(snapshot.data()?.unreadCounts?.[user.uid] || 0);
+        });
 
-      // maintaining the unread count
-      const unsubscribe = onSnapshot(chatRef, (snapshot) => {
-        setUnreadCount(snapshot.data().unreadCounts[user.uid]);
+        return unsubscribe; // Return cleanup function
+      } catch (error) {
+        console.error('Error fetching recipient data:', error);
+      }
+    };
+
+    const unsubscribePromise = fetchRecipientData();
+
+    return () => {
+      unsubscribePromise.then((unsubscribe) => {
+        if (unsubscribe) unsubscribe();
       });
-
-      return () => unsubscribe(); // Cleanup function to unsubscribe when `id` changes or component unmounts
-    }
+    };
   }, [id]);
 
   const lastUpdatedFormatted =
     new Date(lastUpdated?.toDate()).toLocaleTimeString().split(':')[0] +
     ':' +
     new Date(lastUpdated?.toDate()).toLocaleTimeString().split(':')[1];
+    
+  const formatPlaceholder = () => {
+    let placeholder;
+    if (!lastMessage && !lastMessageType) return 'New chat';
+
+    if (lastMessageType !== 'textMessage') {
+      placeholder = [
+        lastMessageType === 'imageText' || lastMessageType === 'image' ? (
+          <IoImage />
+        ) : lastMessageType === 'videoText' || lastMessageType === 'video' ? (
+          <IoVideocam />
+        ) : (
+          <IoDocument />
+        ),
+        lastMessage ? lastMessage : lastMessageType + ' file',
+      ];
+    } else {
+      placeholder = lastMessage;
+    }
+
+    return placeholder;
+  };
 
   return (
     <Link to={`/chats/${id}`}>
@@ -58,13 +94,13 @@ export default function SidebarChat({
 
           <div className='sidebarChat_info'>
             <h4>{name}</h4>
-            <p className={unreadCount > 0 ? `unread` : undefined}>
-              {lastMessage
-                ? lastMessage.length > 50
-                  ? lastMessage.slice(0, 50) + '...'
-                  : lastMessage
-                : 'New chat'}
-            </p>
+            <div
+              className={`placeholder ${
+                unreadCount > 0 ? `unread` : undefined
+              }`}
+            >
+              {formatPlaceholder()}
+            </div>
           </div>
         </div>
         <div className='sidebarChat_right'>

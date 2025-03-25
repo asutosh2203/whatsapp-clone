@@ -13,7 +13,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 
-import {Avatar, IconButton} from "@mui/material"
+import { Avatar, IconButton } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import AttachFileOutlinedIcon from '@mui/icons-material/AttachFileOutlined';
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
@@ -22,12 +22,13 @@ import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import InsertEmoticonOutlinedIcon from '@mui/icons-material/InsertEmoticonOutlined';
 import MicNoneOutlinedIcon from '@mui/icons-material/MicNoneOutlined';
 import SendIcon from '@mui/icons-material/Send';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import db, { storage } from './firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useStateValue } from './StateProvider';
 import { getOtherUserId } from './utils';
 import VideoPlayer from './VideoPlayer';
+import { IoDocument, IoCloudDownload } from 'react-icons/io5';
 
 export default function Chat() {
   const [input, setInput] = useState('');
@@ -122,6 +123,7 @@ export default function Chat() {
         senderId: user.uid,
         timeStamp: serverTimestamp(),
         mediaUrl: inputMedia.length > 0 ? inputMedia : null,
+        mediaType: inputMediaType.length > 0 ? inputMediaType : null,
       });
 
       const recipientId = getOtherUserId(chatId, user.uid);
@@ -136,7 +138,7 @@ export default function Chat() {
           input.length > 0
             ? inputMedia.length > 0
               ? `${inputMediaType}Text`
-              : 'text'
+              : 'textMessage'
             : inputMediaType,
         lastUpdated: serverTimestamp(),
         [`unreadCounts.${recipientId}`]:
@@ -196,6 +198,25 @@ export default function Chat() {
     }
   };
 
+  const isValidURL = (url) => {
+    if (!url) return false;
+    const regex = /^(https?:\/\/)?(www\.)?[\w\-]+(\.[\w\-]+)+([\/?#][^\s]*)?$/;
+    return regex.test(url);
+  };
+
+  const getFilenameAndFormat = (fileUrl) => {
+    const decodedURL = decodeURIComponent(fileUrl);
+    const fileName = decodedURL.split('/').pop().split('?')[0];
+
+    // Remove leading numbers and underscore
+    const cleanFileName = fileName.replace(/^\d+_/, '');
+
+    const format =
+      cleanFileName.split('.')[cleanFileName.split('.').length - 1];
+
+    return [cleanFileName, format];
+  };
+
   return (
     <div className='chat'>
       <div className='chat_header'>
@@ -240,11 +261,38 @@ export default function Chat() {
               {/* <p className='chat_name'>{`${
               message.senderId === user.uid ? '' : message.name
             }`}</p> */}
-              {message.mediaUrl?.length > 0 && (
-                <img src={message.mediaUrl} className='message_media' />
-              )}
+              {message.mediaUrl?.length > 0 &&
+                (message.mediaType === 'image' ? (
+                  <div className='message_media'>
+                    <img src={message.mediaUrl} alt='media' />
+                  </div>
+                ) : message.mediaType === 'video' ? (
+                  <div className='message_media'>
+                    <video src={message.mediaUrl} controls />
+                  </div>
+                ) : (
+                  <div className='other_mediatype'>
+                    <IoDocument size={40} color='white' />
+                    <div>
+                      <p style={{ fontWeight: 'bolder' }}>
+                        {getFilenameAndFormat(message.mediaUrl)[0]}
+                      </p>
+                      <span style={{ textTransform: 'uppercase' }}>
+                        {getFilenameAndFormat(message.mediaUrl)[1]}{' '}
+                      </span>
+                      <span>File</span>
+                    </div>
+                  </div>
+                ))}
               <div className='message_content'>
-                <p>{message.message}</p>
+                {isValidURL(message.message) ? (
+                  <a href={message.message} className='url_message'>
+                    {message.message}
+                  </a>
+                ) : (
+                  <p>{message.message}</p>
+                )}
+                {/* <p>{message.message}</p> */}
                 <p className='chat_timeStamp'>
                   {message.timeStamp &&
                     new Date(message.timeStamp?.toDate())

@@ -15,6 +15,8 @@ export default function VideoPlayer({ src, className }) {
         videoRef.current.pause();
         setIsPlaying(false);
       }
+    } else {
+      console.log('No video ref');
     }
   };
 
@@ -25,12 +27,13 @@ export default function VideoPlayer({ src, className }) {
         ref={videoRef}
         onClick={togglePlay}
         src={src}
+        controls
       />
-      {!isPlaying ? (
-        <FaPlayCircle className='play_pause' />
+      {/* {!isPlaying ? (
+        <FaPlayCircle className='play_pause' onClick={togglePlay} />
       ) : (
-        <FaPauseCircle className='play_pause' />
-      )}
+        <FaPauseCircle className='play_pause' onClick={togglePlay} />
+      )} */}
     </div>
   );
 }
