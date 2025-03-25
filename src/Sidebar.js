@@ -7,6 +7,7 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import DonutLargeIcon from '@mui/icons-material/DonutLarge';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
+import { useNavigate } from 'react-router';
 import db, { auth } from './firebase';
 import {
   collection,
@@ -24,6 +25,7 @@ import { signOut } from 'firebase/auth';
 export default function Sidebar() {
   const [chats, setChats] = useState([]);
   const [{ user }, dispatch] = useStateValue();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) return;
@@ -95,8 +97,10 @@ export default function Sidebar() {
         console.log(`New chat with ${recipientEmail} created successfully!`);
       } else {
         console.log('Chat already exists');
+        navigate(`/chats/${chatId}`);
       }
     } catch (error) {
+      alert('Error creating chat room:', error.message);
       console.error('Error creating chat room:', error);
     }
   };

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import './css/App.css';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router';
 import Chat from './Chat';
 import Sidebar from './Sidebar';
 import Login from './Login';
@@ -60,16 +60,12 @@ export default function App() {
       ) : (
         <div className='app_body'>
           <Router>
-            <Switch>
-              <Route path='/chats/:chatId'>
-                <Sidebar />
-                <Chat />
-              </Route>
-              <Route path='/'>
-                <Sidebar />
-                <SelectChat />
-              </Route>
-            </Switch>
+            <Sidebar />
+            {/* Sidebar stays outside Routes to persist across pages */}
+            <Routes>
+              <Route path='/chats/:chatId' element={<Chat />} />
+              <Route path='/' element={<SelectChat />} />
+            </Routes>
           </Router>
         </div>
       )}
