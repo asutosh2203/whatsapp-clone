@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import './css/Sidebar.css';
 import SidebarChat from './SidebarChat';
 import { useStateValue } from './StateProvider';
-import { Avatar, IconButton } from '@material-ui/core';
-import SearchOutlinedIcon from '@material-ui/icons/SearchOutlined';
-import MoreHorizOutlinedIcon from '@material-ui/icons/MoreHorizOutlined';
-import DonutLargeIcon from '@material-ui/icons/DonutLarge';
-import AddOutlinedIcon from '@material-ui/icons/AddOutlined';
+import { Avatar, IconButton } from '@mui/material';
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
+import DonutLargeIcon from '@mui/icons-material/DonutLarge';
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import db, { auth } from './firebase';
 import {
   collection,
@@ -26,19 +26,19 @@ export default function Sidebar() {
   const [{ user }, dispatch] = useStateValue();
 
   useEffect(() => {
+    if (!user) return;
+
     const chatsRef = collection(db, 'chats');
     const q = query(chatsRef, orderBy('lastUpdated', 'desc')); // Query with ordering
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setChats(
-        snapshot.docs.map((doc) => {
-          if (doc.id.includes(user.uid)) {
-            return {
-              id: doc?.id,
-              data: doc.data(),
-            };
-          }
-        })
+        snapshot.docs
+          .filter((doc) => doc.id.includes(user.uid)) // Filter before mapping
+          .map((doc) => ({
+            id: doc.id,
+            data: doc.data(),
+          }))
       );
     });
 
@@ -48,7 +48,11 @@ export default function Sidebar() {
 
   const createChat = async () => {
     const recipientEmail = prompt('Please enter email of recipient');
-    if (!recipientEmail) return;
+
+    if (!recipientEmail || !recipientEmail.includes('@')) {
+      alert('Invalid email address');
+      return;
+    }
 
     try {
       const userRef = await getUserRefByEmail(recipientEmail);
@@ -135,6 +139,7 @@ export default function Sidebar() {
                 id={chatData.id}
                 lastUpdated={chatData.data.lastUpdated}
                 lastMessage={chatData.data.lastMessage}
+                lastMessageType={chatData.data.lastMessageType}
               />
             )
           );

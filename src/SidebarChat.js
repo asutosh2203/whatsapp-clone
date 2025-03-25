@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './css/sidebarChat.css';
-import { Avatar } from '@material-ui/core';
+import { Avatar } from '@mui/material';
 import db from './firebase';
 import { onSnapshot, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useStateValue } from './StateProvider';
 import { getOtherUserId } from './utils';
+import { IoDocument, IoImage, IoVideocam } from 'react-icons/io5';
 
-export default function SidebarChat({ id, lastUpdated, lastMessage }) {
+export default function SidebarChat({
+  id,
+  lastUpdated,
+  lastMessage,
+  lastMessageType,
+}) {
   const [name, setName] = useState('');
   const [photo, setPhoto] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);

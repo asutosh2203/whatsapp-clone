@@ -12,15 +12,16 @@ import {
   increment,
   updateDoc,
 } from 'firebase/firestore';
-import { Avatar, IconButton } from '@material-ui/core';
-import SearchOutlinedIcon from '@material-ui/icons/SearchOutlined';
-import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined';
-import MoreHorizOutlinedIcon from '@material-ui/icons/MoreHorizOutlined';
-import VideocamOutlinedIcon from '@material-ui/icons/VideocamOutlined';
-import PhoneOutlinedIcon from '@material-ui/icons/PhoneOutlined';
-import InsertEmoticonOutlinedIcon from '@material-ui/icons/InsertEmoticonOutlined';
-import MicNoneOutlinedIcon from '@material-ui/icons/MicNoneOutlined';
-import SendIcon from '@material-ui/icons/Send';
+
+import {Avatar, IconButton} from "@mui/material"
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import AttachFileOutlinedIcon from '@mui/icons-material/AttachFileOutlined';
+import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
+import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import InsertEmoticonOutlinedIcon from '@mui/icons-material/InsertEmoticonOutlined';
+import MicNoneOutlinedIcon from '@mui/icons-material/MicNoneOutlined';
+import SendIcon from '@mui/icons-material/Send';
 import { useParams } from 'react-router-dom';
 import db, { storage } from './firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
