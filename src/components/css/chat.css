@@ -45,6 +45,7 @@
   font-weight: 700;
   font-size: small;
 }
+
 .chat_message {
   display: flex;
   align-items: flex-end;
@@ -65,15 +66,19 @@
   padding-bottom: 0.5rem;
 }
 
+.chat_message:has(.other_mediatype) {
+  min-width: 15rem;
+}
+
 .chat_sent {
+  background-color: rgb(85, 155, 212);
+  color: white;
   margin-left: auto;
-  background-color: rgb(130, 189, 238);
 }
 
 .message_media {
   height: 15rem;
   position: relative;
-  margin-bottom: 0.5rem;
 }
 
 .message_media > * {
@@ -83,13 +88,51 @@
   object-fit: cover;
   overflow: hidden;
   z-index: -10;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3)
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .other_mediatype {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 10px 20px;
+  background: transparent;
+  font-size: 16px;
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease-in-out;
+}
+
+.chat_sent .download-btn {
+  color: white;
+}
+
+.download-btn:hover {
+  box-shadow: 4px 6px 15px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.download-btn:active {
+  transform: translateY(1px);
+  box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.download-btn i {
+  margin-left: 8px;
+  font-size: 18px;
 }
 
 .message_content {
@@ -98,14 +141,15 @@
   justify-content: space-between;
 }
 
-.url_message {
+.chat_message a {
   color: #0059b3;
 }
 
-.url_message:hover {
+.chat_message a:hover {
   text-decoration: underline;
   transition: all 300ms;
   color: #fff;
+  text-shadow: 2px 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .chat_timeStamp {

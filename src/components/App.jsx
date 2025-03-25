@@ -4,15 +4,15 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router';
 import Chat from './Chat';
 import Sidebar from './Sidebar';
 import Login from './Login';
-import { useStateValue } from './StateProvider';
+import { useStateValue } from '../StateProvider';
 import {
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import db, { auth } from './firebase';
-import { actionTypes } from './reducer';
+import db, { auth } from '../firebase';
+import { actionTypes } from '../reducer';
 import SelectChat from './SelectChat';
 
 export default function App() {

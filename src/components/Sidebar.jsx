@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import './css/Sidebar.css';
 import SidebarChat from './SidebarChat';
-import { useStateValue } from './StateProvider';
+import { useStateValue } from '../StateProvider';
 import { Avatar, IconButton } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import DonutLargeIcon from '@mui/icons-material/DonutLarge';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import { useNavigate } from 'react-router';
-import db, { auth } from './firebase';
+import db, { auth } from '../firebase';
 import {
   collection,
   query,
@@ -19,7 +19,7 @@ import {
   serverTimestamp,
   onSnapshot,
 } from 'firebase/firestore';
-import { getUserRefByEmail } from './utils';
+import { getUserRefByEmail } from '../utils';
 import { signOut } from 'firebase/auth';
 
 export default function Sidebar() {

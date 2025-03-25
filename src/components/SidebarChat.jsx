@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import './css/sidebarChat.css';
 import { Avatar } from '@mui/material';
-import db from './firebase';
+import db from '../firebase';
 import { onSnapshot, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { useStateValue } from './StateProvider';
-import { getOtherUserId } from './utils';
+import { useStateValue } from '../StateProvider';
+import { getOtherUserId } from '../utils';
 import { IoDocument, IoImage, IoVideocam } from 'react-icons/io5';
 
 export default function SidebarChat({

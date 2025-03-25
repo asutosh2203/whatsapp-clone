@@ -23,18 +23,18 @@ import InsertEmoticonOutlinedIcon from '@mui/icons-material/InsertEmoticonOutlin
 import MicNoneOutlinedIcon from '@mui/icons-material/MicNoneOutlined';
 import SendIcon from '@mui/icons-material/Send';
 import { useParams } from 'react-router';
-import db, { storage } from './firebase';
+import db, { storage } from '../firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { useStateValue } from './StateProvider';
-import { getOtherUserId } from './utils';
+import { useStateValue } from '../StateProvider';
+import { getOtherUserId } from '../utils';
 import VideoPlayer from './VideoPlayer';
-import { IoDocument, IoCloudDownload } from 'react-icons/io5';
+import ChatMessage from './ChatMessage';
 
 export default function Chat() {
   const [input, setInput] = useState('');
   const [inputMedia, setInputMedia] = useState('');
   const [inputMediaType, setInputMediaType] = useState('');
-  const [progress, setProgress] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [chatName, setChatName] = useState('');
   const [photo, setPhoto] = useState('');
   const [messages, setMessages] = useState([]);
@@ -165,7 +165,7 @@ export default function Chat() {
           const progressPercent = Math.round(
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100
           );
-          setProgress(progressPercent);
+          setUploadProgress(progressPercent);
         },
         (error) => reject(error),
         async () => {
@@ -198,25 +198,6 @@ export default function Chat() {
     }
   };
 
-  const isValidURL = (url) => {
-    if (!url) return false;
-    const regex = /^(https?:\/\/)?(www\.)?[\w\-]+(\.[\w\-]+)+([\/?#][^\s]*)?$/;
-    return regex.test(url);
-  };
-
-  const getFilenameAndFormat = (fileUrl) => {
-    const decodedURL = decodeURIComponent(fileUrl);
-    const fileName = decodedURL.split('/').pop().split('?')[0];
-
-    // Remove leading numbers and underscore
-    const cleanFileName = fileName.replace(/^\d+_/, '');
-
-    const format =
-      cleanFileName.split('.')[cleanFileName.split('.').length - 1];
-
-    return [cleanFileName, format];
-  };
-
   return (
     <div className='chat'>
       <div className='chat_header'>
@@ -247,70 +228,98 @@ export default function Chat() {
           </IconButton>
         </div>
       </div>
+
       <div className='chat_body'>
         {messages.map((message, index) => {
           return (
-            <div
-              key={index}
-              ref={index === messages.length - 1 ? lastMessageRef : null}
+            // <div
+            //   key={index}
+            //   ref={index === messages.length - 1 ? lastMessageRef : null}
+            //   className={`chat_message ${
+            //     message.senderId === user.uid && 'chat_sent'
+            //   }`}
+            //   style={{ display: message.mediaUrl?.length > 0 && 'block' }}
+            // >
+            //   {/* <p className='chat_name'>{`${
+            //   message.senderId === user.uid ? '' : message.name
+            // }`}</p> */}
+
+            //   {message.mediaUrl?.length > 0 &&
+            //     (message.mediaType === 'image' ? (
+            //       <div className='message_media'>
+            //         <img src={message.mediaUrl} alt='media' />
+            //       </div>
+            //     ) : message.mediaType === 'video' ? (
+            //       <div className='message_media'>
+            //         <video src={message.mediaUrl} controls />
+            //       </div>
+            //     ) : (
+            //       <div className='other_mediatype'>
+            //         <IoDocument size={40} color='white' />
+            //         <div>
+            //           <p style={{ fontWeight: 'bolder' }}>
+            //             {getFilenameAndFormat(message.mediaUrl)[0]}
+            //           </p>
+            //           <span style={{ textTransform: 'uppercase' }}>
+            //             {getFilenameAndFormat(message.mediaUrl)[1]}{' '}
+            //           </span>
+            //           <span>File</span>
+            //         </div>
+            //       </div>
+            //     ))}
+            //   {message.mediaUrl?.length > 0 && (
+            //     <div>
+            //       <button
+            //         className='download-btn'
+            //         onClick={() => {
+            //           downloadMedia(
+            //             message.mediaUrl,
+            //             getFilenameAndFormat(message.mediaUrl)[0],
+            //             setDownloadProgress
+            //           );
+            //         }}
+            //       >
+            //         Download
+            //         <IoCloudDownload />
+            //       </button>
+            //       {/* {downloadProgress > 0 && (
+            //         <progress max={100} value={downloadProgress} />
+            //       )} */}
+            //     </div>
+            //   )}
+            //   <div className='message_content'>
+            //     <p>{formatText(message.message)}</p>
+
+            //     {/* <p>{message.message}</p> */}
+            //     <p className='chat_timeStamp'>
+            //       {message.timeStamp &&
+            //         new Date(message.timeStamp?.toDate())
+            //           .toLocaleTimeString()
+            //           .split(':')[0]}
+            //       :
+            //       {message.timeStamp &&
+            //         new Date(message.timeStamp?.toDate())
+            //           .toLocaleTimeString()
+            //           .split(':')[1]}
+            //     </p>
+            //   </div>
+            // </div>
+            <ChatMessage
               className={`chat_message ${
                 message.senderId === user.uid && 'chat_sent'
               }`}
-              style={{ display: message.mediaUrl?.length > 0 && 'block' }}
-            >
-              {/* <p className='chat_name'>{`${
-              message.senderId === user.uid ? '' : message.name
-            }`}</p> */}
-              {message.mediaUrl?.length > 0 &&
-                (message.mediaType === 'image' ? (
-                  <div className='message_media'>
-                    <img src={message.mediaUrl} alt='media' />
-                  </div>
-                ) : message.mediaType === 'video' ? (
-                  <div className='message_media'>
-                    <video src={message.mediaUrl} controls />
-                  </div>
-                ) : (
-                  <div className='other_mediatype'>
-                    <IoDocument size={40} color='white' />
-                    <div>
-                      <p style={{ fontWeight: 'bolder' }}>
-                        {getFilenameAndFormat(message.mediaUrl)[0]}
-                      </p>
-                      <span style={{ textTransform: 'uppercase' }}>
-                        {getFilenameAndFormat(message.mediaUrl)[1]}{' '}
-                      </span>
-                      <span>File</span>
-                    </div>
-                  </div>
-                ))}
-              <div className='message_content'>
-                {isValidURL(message.message) ? (
-                  <a href={message.message} className='url_message'>
-                    {message.message}
-                  </a>
-                ) : (
-                  <p>{message.message}</p>
-                )}
-                {/* <p>{message.message}</p> */}
-                <p className='chat_timeStamp'>
-                  {message.timeStamp &&
-                    new Date(message.timeStamp?.toDate())
-                      .toLocaleTimeString()
-                      .split(':')[0]}
-                  :
-                  {message.timeStamp &&
-                    new Date(message.timeStamp?.toDate())
-                      .toLocaleTimeString()
-                      .split(':')[1]}
-                </p>
-              </div>
-            </div>
+              message={message}
+              index={index}
+              ref={index === messages.length - 1 ? lastMessageRef : null}
+            />
           );
         })}
       </div>
+
       <div className='chat_footer_container'>
-        {progress > 0 && progress < 100 && <p>Uploading: {progress}%</p>}
+        {uploadProgress > 0 && uploadProgress < 100 && (
+          <p>Uploading: {uploadProgress}%</p>
+        )}
         {inputMedia && inputMediaType == 'image' && (
           <img className='input_media' src={inputMedia} />
         )}
